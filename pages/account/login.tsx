@@ -2,8 +2,8 @@ import Layout from 'components/Layout';
 
 const IndexPage = () => {
   return (
-    <Layout title='Home'>
-      <h1>Home</h1>
+    <Layout title='Login'>
+      <h1>Login</h1>
     </Layout>
   );
 };
