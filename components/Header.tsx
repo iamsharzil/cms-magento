@@ -1,7 +1,15 @@
 import Link from 'next/link';
 import React from 'react';
+import { useSelector } from 'react-redux';
+import useAuth from 'hooks/useAuth';
 
 const Header = () => {
+  const isAuthenticated = useSelector(
+    (state: { isAuthenticated: boolean }) => state.isAuthenticated
+  );
+
+  const { logout } = useAuth();
+
   return (
     <header>
       <nav className='navbar navbar-expand-lg navbar-dark bg-primary'>
@@ -35,9 +43,15 @@ const Header = () => {
               </Link>
             </li>
             <li className='nav-item'>
-              <Link href='/account/login'>
-                <a className='nav-link'>Login</a>
-              </Link>
+              {!!isAuthenticated ? (
+                <a className='nav-link' onClick={logout}>
+                  Logout
+                </a>
+              ) : (
+                <Link href='/account/login'>
+                  <a className='nav-link'>Login</a>
+                </Link>
+              )}
             </li>
             <li className='nav-item'>
               <Link href='/account/signup'>
