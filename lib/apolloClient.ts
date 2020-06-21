@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { useMemo } from 'react';
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
+
 import { SERVER } from 'config';
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined;
@@ -13,6 +14,7 @@ export type ResolverContext = {
 
 function createIsomorphLink() {
   const { HttpLink } = require('apollo-link-http');
+
   return new HttpLink({
     uri: SERVER,
     credentials: 'same-origin',
