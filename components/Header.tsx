@@ -37,14 +37,20 @@ const Header = () => {
                 </a>
               </Link>
             </li>
-            <li className='nav-item'>
-              <Link href='/account/profile'>
-                <a className='nav-link'>My Profile</a>
-              </Link>
-            </li>
+            {!!isAuthenticated && (
+              <li className='nav-item'>
+                <Link href='/account/profile'>
+                  <a className='nav-link'>My Profile</a>
+                </Link>
+              </li>
+            )}
             <li className='nav-item'>
               {!!isAuthenticated ? (
-                <a className='nav-link' onClick={logout}>
+                <a
+                  className='nav-link'
+                  style={{ cursor: 'pointer' }}
+                  onClick={logout}
+                >
                   Logout
                 </a>
               ) : (
@@ -53,11 +59,13 @@ const Header = () => {
                 </Link>
               )}
             </li>
-            <li className='nav-item'>
-              <Link href='/account/signup'>
-                <a className='nav-link'>Sign Up</a>
-              </Link>
-            </li>
+            {!isAuthenticated && (
+              <li className='nav-item'>
+                <Link href='/account/signup'>
+                  <a className='nav-link'>Sign Up</a>
+                </Link>
+              </li>
+            )}
           </ul>
           <form className='form-inline my-2 my-lg-0'>
             <input
