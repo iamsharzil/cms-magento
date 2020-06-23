@@ -1,25 +1,42 @@
 import { NextPage, GetServerSideProps } from 'next';
 import nextCookie from 'next-cookies';
+import cookie from 'js-cookie';
 
 import Layout from 'components/Layout';
 
 import { initializeApollo } from 'lib/apolloClient';
 import { GET_CUSTOMER_INFO_QUERY } from 'lib/graphql/account';
+import { useQuery } from '@apollo/react-hooks';
 
 export interface IProfile {
-  profile: {
-    created_at: String;
-    email: String;
-    firstname: String;
-    id: Number;
-    lastname: String;
-  };
+  created_at: String;
+  email: String;
+  firstname: String;
+  id: Number;
+  lastname: String;
 }
 
-const ProfilePage: NextPage<IProfile> = (props) => {
-  // const user = props.initialApolloState;
+const ProfilePage: NextPage = () => {
+  const token = cookie.get('token');
 
-  const { email, firstname, lastname } = props.profile;
+  const { loading, error, data } = useQuery(GET_CUSTOMER_INFO_QUERY, {
+    context: {
+      headers: {
+        authorization: token ? `Bearer ${token}` : '',
+      },
+    },
+    notifyOnNetworkStatusChange: true,
+  });
+
+  const { email, firstname, lastname }: IProfile = data.customer;
+
+  if (loading) {
+    return <h6>Loading.....</h6>;
+  }
+
+  if (error) {
+    return <h6>{error.graphQLErrors[0].message}</h6>;
+  }
 
   return (
     <Layout title='Profile'>
@@ -42,7 +59,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const { token } = nextCookie(context);
 
-  const { data } = await apolloClient.query({
+  await apolloClient.query({
     query: GET_CUSTOMER_INFO_QUERY,
     context: {
       headers: {
@@ -54,7 +71,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   return {
     props: {
       initialApolloState: apolloClient.cache.extract(),
-      profile: data.customer,
     },
   };
 };

@@ -1,35 +1,47 @@
 import { useMemo } from 'react';
 import { createStore, applyMiddleware } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
+import storage from 'redux-persist/lib/storage';
+import { persistReducer } from 'redux-persist';
+import thunkMiddleware from 'redux-thunk';
 
-let store: import('redux').Store<{ isAuthenticated: boolean }, any> | undefined;
+import reducer from './reducers';
 
-const initialState = {
+let initialState = {
   isAuthenticated: false,
+  quantity: null,
+  customerId: null,
+  guestId: null,
+  loading: false,
+  error: null,
 };
 
-const reducer = (state = initialState, action: { type: any }) => {
-  switch (action.type) {
-    case 'LOGIN':
-      return {
-        ...state,
-        isAuthenticated: true,
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        isAuthenticated: false,
-      };
-    default:
-      return state;
-  }
+let store:
+  | (import('redux').Store<
+      {
+        isAuthenticated: boolean;
+        quantity: null;
+        customerId: null;
+        guestId: null;
+      },
+      import('redux').Action<any>
+    > & { dispatch: unknown })
+  | undefined;
+
+const persistConfig = {
+  key: 'primary',
+  storage,
+  whitelist: ['isAuthenticated', 'quantity', 'customerId', 'guestId'], // place to select which state you want to persist
+  blacklist: ['error', 'loading'],
 };
+
+const persistedReducer: any = persistReducer(persistConfig, reducer);
 
 function initStore(preloadedState = initialState) {
   return createStore(
-    reducer,
+    persistedReducer,
     preloadedState,
-    composeWithDevTools(applyMiddleware())
+    composeWithDevTools(applyMiddleware(thunkMiddleware))
   );
 }
 
