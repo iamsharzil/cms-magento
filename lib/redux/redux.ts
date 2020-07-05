@@ -6,23 +6,19 @@ import { persistReducer } from 'redux-persist';
 import thunkMiddleware from 'redux-thunk';
 
 import reducer from './reducers';
-
-let initialState = {
-  isAuthenticated: false,
-  quantity: null,
-  customerId: null,
-  guestId: null,
-  loading: false,
-  error: null,
-};
+import { IInitialState } from 'interfaces/state';
 
 let store:
   | (import('redux').Store<
       {
-        isAuthenticated: boolean;
-        quantity: null;
-        customerId: null;
-        guestId: null;
+        isAuthenticated?: boolean;
+        customerId?: string;
+        guestId?: string;
+        quantity?: string;
+        id?: string;
+        loading?: boolean;
+        error?: string;
+        address?: Object;
       },
       import('redux').Action<any>
     > & { dispatch: unknown })
@@ -31,13 +27,13 @@ let store:
 const persistConfig = {
   key: 'primary',
   storage,
-  whitelist: ['isAuthenticated', 'quantity', 'customerId', 'guestId'], // place to select which state you want to persist
-  blacklist: ['error', 'loading'],
+  whitelist: ['isAuthenticated', 'quantity', 'customerId', 'guestId', 'cart'], // place to select which state you want to persist
+  // blacklist: ['product'],
 };
 
 const persistedReducer: any = persistReducer(persistConfig, reducer);
 
-function initStore(preloadedState = initialState) {
+function initStore(preloadedState: IInitialState) {
   return createStore(
     persistedReducer,
     preloadedState,
@@ -45,7 +41,7 @@ function initStore(preloadedState = initialState) {
   );
 }
 
-export const initializeStore = (preloadedState: any) => {
+export const initializeStore = (preloadedState?: IInitialState | any) => {
   let _store = store ?? initStore(preloadedState);
 
   // After navigating to a page with an initial Redux state, merge that state
@@ -67,9 +63,7 @@ export const initializeStore = (preloadedState: any) => {
   return _store;
 };
 
-export function useStore(
-  initialState: { isAuthenticated: boolean } | undefined
-) {
+export function useStore(initialState: IInitialState) {
   const store = useMemo(() => initializeStore(initialState), [initialState]);
   return store;
 }

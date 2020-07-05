@@ -1,24 +1,36 @@
+import { useQuery } from '@apollo/react-hooks';
+import { NextPage } from 'next';
+import { motion } from 'framer-motion';
+
 import Layout from 'components/Layout';
+import Card from 'components/Card';
+import Loader from 'components/Loader';
+
 import { initializeApollo } from 'lib/apolloClient';
 import { CATEGORY_LIST_QUERY } from 'lib/graphql/category';
-import { useQuery } from '@apollo/react-hooks';
-import Card from 'components/Card';
+
 import { IProduct } from 'interfaces/product';
 
-const IndexPage = () => {
+const container = {
+  hidden: { opacity: 1, scale: 0 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      delay: 0.3,
+      when: 'beforeChildren',
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const IndexPage: NextPage = () => {
   const { loading, error, data } = useQuery(CATEGORY_LIST_QUERY, {
-    variables: { eq: 'face-care' },
-    // Setting this value to true will make the component rerender when
-    // the "networkStatus" changes, so we are able to know if it is fetching
-    // more data
+    variables: { eq: 'shop-now' },
     notifyOnNetworkStatusChange: true,
   });
 
   let products = data.categoryList[0].products.items;
-
-  if (loading) {
-    return <h6>Loading.....</h6>;
-  }
 
   if (error) {
     return <h6>{error.graphQLErrors[0].message}</h6>;
@@ -26,13 +38,22 @@ const IndexPage = () => {
 
   return (
     <Layout title='Home'>
-      <div className='container'>
-        <div className='row'>
-          {products.map((product: IProduct) => (
-            <Card key={product.id} {...product} />
-          ))}
-        </div>
-      </div>
+      {loading ? (
+        <Loader loading={loading} />
+      ) : (
+        <motion.div
+          className='container'
+          variants={container}
+          initial='hidden'
+          animate='visible'
+        >
+          <div className='row'>
+            {products.map((product: IProduct) => (
+              <Card key={product.id} {...product} />
+            ))}
+          </div>
+        </motion.div>
+      )}
     </Layout>
   );
 };
@@ -43,7 +64,7 @@ export async function getStaticProps() {
   await apolloClient.query({
     query: CATEGORY_LIST_QUERY,
     // URL OF THE CATEGORY
-    variables: { eq: 'face-care' },
+    variables: { eq: 'shop-now' },
   });
 
   return {

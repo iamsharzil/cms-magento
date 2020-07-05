@@ -1,185 +1,325 @@
 import { useDispatch } from 'react-redux';
-import cookie from 'js-cookie';
+import Router from 'next/router';
 
 import {
   ADD_TO_CART_QUERY,
   EMPTY_CUSTOMER_CART_QUERY,
   GET_CUSTOMER_CART_QUERY,
   EMPTY_GUEST_CART_QUERY,
+  MERGE_CART_QUERY,
+  REMOVE_ITEM_FROM_CART_QUERY,
+  UPDATE_ITEM_FROM_CART_QUERY,
+  APPLY_COUPON_QUERY,
+  REMOVE_COUPON_QUERY,
+  SET_PAYMENT_METHOD_QUERY,
+  PLACE_ORDER_QUERY,
+  SET_SHIPPING_METHOD_QUERY,
 } from 'lib/graphql/cart';
-import { initializeApollo } from 'lib/apolloClient';
+
 import {
   setCartQuantity,
   setCustomercustomerId,
   setGuestcustomerId,
   setError,
   setLoading,
-} from 'lib/actions';
-
-interface Props {
-  customerId?: string;
-  guestId?: string;
-  quantity?: Number;
-  sku?: string;
-  token?: string;
-}
+  setCartInfo,
+  setIdToNull,
+  setSuccess,
+} from 'lib/redux/actions';
+import useApolloQuery from './useApolloQuery';
+import { IVariables } from 'interfaces/variable';
 
 const useCart = () => {
   const dispatch = useDispatch();
-  const apolloClient = initializeApollo();
+
+  const { getApolloQuery, mutateApolloQuery } = useApolloQuery();
 
   // CUSTOMER EMPTY CART
-  const createEmptyCartCustomer = async (token: string) => {
-    const { data } = await apolloClient.query({
-      query: EMPTY_CUSTOMER_CART_QUERY,
-      context: {
-        headers: {
-          authorization: token ? `Bearer ${token}` : '',
-        },
-      },
-    });
+  const createEmptyCartCustomer = async ({ guestId, token }: IVariables) => {
+    const variables = { guestId, token };
 
-    let customerId = data.customerCart.id;
+    const { data } = await getApolloQuery(EMPTY_CUSTOMER_CART_QUERY, variables);
 
     /**
      * IF CART ID EXISTS
      * SET CUSTOMER CART ID IN REDUX STATE
      */
-    if (!!customerId) dispatch(setCustomercustomerId(customerId));
+    if (!!data) dispatch(setCustomercustomerId(data.customerCart.id));
 
-    getCartInfo({ token, customerId });
+    /**
+     * IF GUEST ID AND TOKEN IS PRESENT
+     * MERGE CARTS
+     * ELSE
+     * GET CUSTOMER CART DETAILS
+     */
+
+    if (!!guestId && !!token) {
+      mergeCarts({ customerId: data.customerCart.id, guestId, token });
+    } else {
+      await getCartInfo({ customerId: data.customerCart.id, token });
+    }
   };
 
   // GUEST EMPTY CART
   const createEmptyCartGuest = async () => {
-    const { data } = await apolloClient.mutate({
-      mutation: EMPTY_GUEST_CART_QUERY,
-    });
-
-    console.log('guest:cart', data.createEmptyCart);
-
-    let guestId = data.createEmptyCart;
+    const { data } = await mutateApolloQuery(EMPTY_GUEST_CART_QUERY, {});
 
     /**
      * IF CART ID EXISTS
      * SET GUEST CART ID IN REDUX STATE
      */
-    if (!!guestId) dispatch(setGuestcustomerId(guestId));
+    if (!!data) dispatch(setGuestcustomerId(data.createEmptyCart));
 
-    getCartInfo({ guestId });
+    return {
+      guestId: data.createEmptyCart,
+    };
+  };
 
-    return guestId;
+  // MERGE CARTS
+  const mergeCarts = async ({ customerId, guestId, token }: IVariables) => {
+    const variables = {
+      source_cart_id: guestId,
+      destination_cart_id: customerId,
+      token,
+    };
+
+    try {
+      await mutateApolloQuery(MERGE_CART_QUERY, variables);
+      await getCartInfo({ customerId, guestId, token });
+    } catch (error) {
+      console.log('error:merge', error.graphQLErrors[0].message);
+    }
   };
 
   // ADD ITEM TO CART
-  const addToCart = async (item: Props) => {
-    let token = cookie.get('token');
+  const addToCart = async (item: IVariables) => {
+    const { customerId, guestId, token } = item;
 
-    /**
-     * IF TOKEN
-     * ADD CART TO CUSTOMER
-     * ELSE
-     * ADD CART TO GUEST
-     */
-
-    if (!!token) {
-      await addToCartCustomer(item, token);
-    } else {
-      await addToCartGuest(item);
-    }
-  };
-
-  // PASS TOKEN FOR A LOGGED IN CUSTOMER
-  const addToCartCustomer = async (item: Props, token: string) => {
-    await mutateAddToCart(item, token);
-  };
-
-  const mutateAddToCart = async (item: Props, token?: string) => {
-    let { customerId, guestId, quantity, sku } = item;
-
-    let cartId = !!customerId ? customerId : guestId;
-
-    dispatch(setLoading(true));
+    dispatch(setLoading(true, item.sku));
+    dispatch(setError('', item.sku));
+    dispatch(setSuccess(false, item.sku));
 
     try {
-      const { data } = await apolloClient.mutate({
-        mutation: ADD_TO_CART_QUERY,
-        variables: {
-          cartId,
-          quantity,
-          sku,
-        },
-        context: {
-          headers: {
-            authorization: token ? `Bearer ${token}` : '',
-          },
-        },
-      });
+      /**
+       * IF CUSTOMER ID OR GUEST ID EXISTS
+       * ADD PRODUCT TO CART
+       * ELSE
+       * CREATE GUEST CART ID
+       * ADD PRODUCT TO CART
+       */
 
-      if (!!data) {
-        let cartQuantity = data.addSimpleProductsToCart.cart.items.reduce(
-          (acc: number, next: { quantity: number }) => acc + next.quantity,
-          0
-        );
-        dispatch(setCartQuantity(cartQuantity));
-        dispatch(setLoading(false));
+      if (!!customerId || !!guestId) {
+        await mutateApolloQuery(ADD_TO_CART_QUERY, item);
+        await getCartInfo({ customerId, guestId, token });
+      } else if (guestId === null) {
+        const { guestId } = await createEmptyCartGuest();
+        await mutateApolloQuery(ADD_TO_CART_QUERY, { ...item, guestId });
+        await getCartInfo({ customerId, guestId, token });
       }
+
+      dispatch(setError('', item.sku));
+      dispatch(setLoading(false, item.sku));
+      dispatch(setSuccess(true, item.sku));
+
+      setTimeout(() => {
+        dispatch(setSuccess(false, item.sku));
+      }, 1000);
     } catch (error) {
-      // console.log('error:atc', error.graphQLErrors[0].message);
-      dispatch(setError(error.graphQLErrors[0].message));
-      dispatch(setLoading(false));
+      console.log(error.graphQLErrors[0].message);
+      dispatch(setError(error.graphQLErrors[0].message, item.sku));
+      dispatch(setLoading(false, item.sku));
     }
   };
 
-  // USE GUEST ID FOR A GUEST
-  const addToCartGuest = async (item: Props) => {
-    const { guestId } = item;
+  // REMOVE CART ITEMS
+  const removeItemFromCart = async (item: IVariables) => {
+    const { customerId, guestId, cart_item_id, token } = item;
 
-    /**
-     * IF GUEST ID EXISTS IN STATE
-     * DONT'CREATE NEW CART ID AND ADD ITEM TO CART
-     * ELSE
-     * CREATE CART ID AND ADD ITEM TO CART
-     */
-    if (!!guestId) {
-      await mutateAddToCart(item);
-    } else {
-      const guestId = await createEmptyCartGuest();
-      await mutateAddToCart({ ...item, guestId });
+    dispatch(setLoading(true, cart_item_id));
+    dispatch(setError('', cart_item_id));
+
+    try {
+      await mutateApolloQuery(REMOVE_ITEM_FROM_CART_QUERY, item);
+      await getCartInfo({ customerId, guestId, token });
+
+      dispatch(setLoading(false, cart_item_id));
+      dispatch(setError('', cart_item_id));
+    } catch (error) {
+      dispatch(setError(error.graphQLErrors[0].message, cart_item_id));
+      dispatch(setLoading(false, cart_item_id));
+    }
+  };
+
+  // UDPATE CART ITEMS
+  const updateCartItems = async (item: IVariables) => {
+    const { customerId, guestId, cart_item_id, token } = item;
+
+    dispatch(setLoading(true, cart_item_id));
+    dispatch(setError('', cart_item_id));
+
+    try {
+      await mutateApolloQuery(UPDATE_ITEM_FROM_CART_QUERY, item);
+      await getCartInfo({ guestId, customerId, token });
+
+      dispatch(setLoading(false, cart_item_id));
+      dispatch(setError('', cart_item_id));
+    } catch (error) {
+      console.log('error:atc', error.graphQLErrors[0].message);
+      dispatch(setError(error.graphQLErrors[0].message, cart_item_id));
+      dispatch(setLoading(false, cart_item_id));
+    }
+  };
+
+  // APPLY COUPON TO THE CART
+  const applyCoupon = async ({
+    customerId,
+    guestId,
+    coupon_code,
+    token,
+    fetchPolicy,
+  }: IVariables) => {
+    const variables = { guestId, customerId, coupon_code, token };
+
+    dispatch(setLoading(true, 'coupon_code'));
+    dispatch(setError('', 'coupon_code'));
+
+    try {
+      await mutateApolloQuery(APPLY_COUPON_QUERY, variables);
+      await getCartInfo({ customerId, guestId, token, fetchPolicy });
+
+      dispatch(setLoading(false, 'coupon_code'));
+      dispatch(setError('', 'coupon_code'));
+    } catch (error) {
+      console.log('error:coupon', error);
+      dispatch(setLoading(false, 'coupon_code'));
+      dispatch(setError(error.graphQLErrors[0].message, 'coupon_code'));
+    }
+  };
+
+  // REMOVE COUPON FROM THE CART
+  const removeCoupon = async ({
+    customerId,
+    guestId,
+    token,
+    fetchPolicy,
+  }: IVariables) => {
+    const variables = { guestId, customerId, token };
+
+    dispatch(setLoading(true, 'coupon_code'));
+    dispatch(setError('', 'coupon_code'));
+
+    try {
+      await mutateApolloQuery(REMOVE_COUPON_QUERY, variables);
+      await getCartInfo({ customerId, guestId, token, fetchPolicy });
+
+      dispatch(setLoading(false, 'coupon_code'));
+      dispatch(setError('', 'coupon_code'));
+    } catch (error) {
+      console.log('error:coupon', error);
+      dispatch(setLoading(false, 'coupon_code'));
+      dispatch(setError(error.graphQLErrors[0].message, 'coupon_code'));
     }
   };
 
   // GET CART INFO OF USER
-  const getCartInfo = async ({ token, customerId, guestId }: Props) => {
-    let cartId = !!customerId ? customerId : guestId;
+  const getCartInfo = async ({
+    customerId,
+    guestId,
+    token,
+    fetchPolicy,
+  }: IVariables) => {
+    const variables = {
+      customerId,
+      guestId,
+      token,
+      fetchPolicy,
+    };
+
+    const { data } = await getApolloQuery(GET_CUSTOMER_CART_QUERY, variables);
+
+    const cartQuantity = data.cart.total_quantity;
+
+    dispatch(setCartQuantity(cartQuantity));
+    dispatch(setCartInfo(data.cart));
+  };
+
+  // SET SHIPMENT MODE
+  const setShipmentMode = async (variables: IVariables) => {
+    dispatch(setLoading(true, 'shipment'));
+    dispatch(setError('', 'shipment'));
 
     try {
-      const { data } = await apolloClient.query({
-        query: GET_CUSTOMER_CART_QUERY,
-        variables: {
-          cartId,
-        },
-        context: {
-          headers: {
-            authorization: token ? `Bearer ${token}` : '',
-          },
-        },
-      });
+      await mutateApolloQuery(SET_SHIPPING_METHOD_QUERY, variables);
 
-      console.log('cartInfo:data', data);
-
-      let quantity = data.cart.total_quantity;
-      dispatch(setCartQuantity(quantity));
+      dispatch(setLoading(false, 'shipment'));
+      dispatch(setError('', 'shipment'));
     } catch (error) {
-      console.log('cartInfo:error', error);
+      console.log('error:payment', error);
+      dispatch(setLoading(false, 'shipment'));
+      dispatch(setError(error.graphQLErrors[0].message, 'shipment'));
+    }
+  };
+
+  // SET PAYMENT MODE
+  const setPaymentMode = async ({
+    customerId,
+    guestId,
+    token,
+    code,
+  }: IVariables) => {
+    const variables = { guestId, customerId, token, code };
+
+    dispatch(setLoading(true, 'payment'));
+    dispatch(setError('', 'payment'));
+
+    try {
+      await mutateApolloQuery(SET_PAYMENT_METHOD_QUERY, variables);
+
+      dispatch(setLoading(false, 'payment'));
+      dispatch(setError('', 'payment'));
+    } catch (error) {
+      console.log('error:payment', error);
+      dispatch(setLoading(false, 'payment'));
+      dispatch(setError(error.graphQLErrors[0].message, 'payment'));
+    }
+  };
+
+  // PLACE ORDER
+  const placeOrder = async (variables: IVariables) => {
+    dispatch(setLoading(true, 'payment'));
+    dispatch(setError('', 'payment'));
+
+    try {
+      const { data } = await mutateApolloQuery(PLACE_ORDER_QUERY, variables);
+
+      const orderNo = data.placeOrder.order.order_number;
+
+      console.log('ORDER', orderNo);
+
+      Router.push('/order/[success]', `/order/${orderNo}`);
+
+      dispatch(setLoading(false, 'payment'));
+      dispatch(setError('', 'payment'));
+      dispatch(setIdToNull());
+    } catch (error) {
+      console.log('error:payment', error);
+      dispatch(setLoading(false, 'payment'));
+      dispatch(setError(error.graphQLErrors[0].message, 'payment'));
     }
   };
 
   return {
     addToCart,
+    applyCoupon,
     createEmptyCartCustomer,
     createEmptyCartGuest,
     getCartInfo,
+    placeOrder,
+    removeItemFromCart,
+    removeCoupon,
+    setPaymentMode,
+    setShipmentMode,
+    updateCartItems,
   };
 };
 

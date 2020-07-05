@@ -1,51 +1,84 @@
-import React from 'react';
+import { FC } from 'react';
+import cookie from 'js-cookie';
 import { useForm } from 'react-hook-form';
 import { useSelector } from 'react-redux';
+import FadeIn from 'react-fade-in';
+import { motion } from 'framer-motion';
+import Lottie from 'react-lottie';
 
 import useCart from 'hooks/useCart';
-import { IProduct } from 'interfaces/product';
 
-import { Message } from './Message';
+import { IProduct } from 'interfaces/product';
+import { IInitialState } from 'interfaces/state';
+
+// import animationData from 'lottie/loader.json';
+import successAnimation from 'lottie/success.json';
 
 type Inputs = {
   quantity: Number;
   sku: string;
 };
 
-const Card = (product: IProduct) => {
-  const imageUrl = product.image.url;
-  const price = product.price_range.maximum_price.final_price.value;
+// const defaultOptions = {
+//   loop: true,
+//   autoplay: true,
+//   animationData,
+//   rendererSettings: {
+//     preserveAspectRatio: 'xMidYMid slice',
+//   },
+// };
+
+const item = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+  },
+};
+
+const successOptions = {
+  loop: false,
+  autoplay: true,
+  animationData: successAnimation,
+  rendererSettings: {
+    preserveAspectRatio: 'xMidYMid slice',
+  },
+};
+
+const Card: FC<IProduct> = (product) => {
+  const token = cookie.get('token');
 
   const { register, handleSubmit } = useForm<Inputs>();
-
   const { addToCart } = useCart();
 
-  const customerId = useSelector(
-    (state: { customerId: string }) => state.customerId
+  const { loading, success, id, guestId, customerId } = useSelector(
+    (state: IInitialState) => state
   );
-
-  const error = useSelector((state: { error: string }) => state.error);
-  const loading = useSelector((state: { loading: boolean }) => state.loading);
-
-  const guestId = useSelector((state: { guestId: string }) => state.guestId);
-
   const onSubmit = async ({ quantity, sku }: Inputs) => {
     const item = {
       customerId,
       guestId,
       quantity,
       sku,
+      token,
     };
 
-    await addToCart(item);
+    addToCart(item);
   };
+
+  const imageUrl = product.image.url;
+  const price = product.price_range.maximum_price.final_price.value;
 
   if (product.stock_status === 'OUT_OF_STOCK') {
     return null;
   }
 
   return (
-    <div key={product.id} className='col-3 card mb-3 mx-4'>
+    <motion.div
+      key={product.id}
+      className='col-3 card mb-3 mx-4'
+      variants={item}
+    >
       <form className='mt-5' onSubmit={handleSubmit(onSubmit)}>
         <input
           type='hidden'
@@ -62,13 +95,26 @@ const Card = (product: IProduct) => {
           <p className='card-text'>
             <strong>Rs. {price}</strong>{' '}
           </p>
-          <button type='submit' className='btn btn-primary' disabled={loading}>
-            Add To Cart
-          </button>
+
+          {product.sku === id && !!success ? (
+            <FadeIn>
+              <Lottie options={successOptions} height={50} width={120} />
+            </FadeIn>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.8 }}
+              type='submit'
+              className='btn btn-primary'
+              disabled={product.sku === id && loading}
+            >
+              {product.sku === id && loading ? 'ADDING' : 'ADD TO CART'}
+            </motion.button>
+          )}
         </div>
       </form>
-      <Message key={product.id} error={error} />
-    </div>
+      {/* <Message error={product.sku === id && error} /> */}
+    </motion.div>
   );
 };
 

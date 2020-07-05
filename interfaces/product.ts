@@ -1,3 +1,11 @@
+export type TPriceRange = {
+  maximum_price: {
+    final_price: {
+      value: Number;
+    };
+  };
+};
+
 export interface IProduct {
   id: number;
   name: string;
@@ -7,11 +15,5 @@ export interface IProduct {
   image: {
     url: string;
   };
-  price_range: {
-    maximum_price: {
-      final_price: {
-        value: Number;
-      };
-    };
-  };
+  price_range: TPriceRange;
 }

@@ -72,8 +72,19 @@ const Header = () => {
             )}
           </ul>
 
-          <img src='/icons/cart.svg' alt='' />
-          <span className='badge badge-primary badge-pill'>{quantity}</span>
+          <Link href='/checkout/cart'>
+            <a>
+              <img
+                className='img-fluid'
+                style={{ cursor: 'pointer' }}
+                src='/icons/cart.svg'
+                alt=''
+              />
+            </a>
+          </Link>
+          <span className='badge badge-primary badge-pill'>
+            {quantity > 0 && quantity}
+          </span>
         </div>
       </nav>
     </header>

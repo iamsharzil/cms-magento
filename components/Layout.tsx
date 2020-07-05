@@ -1,13 +1,14 @@
 import React, { ReactNode } from 'react';
 import Head from 'next/head';
 import Header from './Header';
+import { ToastContainer } from 'react-toastify';
 
 type Props = {
   children?: ReactNode;
   title?: string;
 };
 
-const Layout = ({ children, title = 'This is the default title' }: Props) => {
+const Layout = ({ children, title = 'NEXT JS WITH MAGENTO' }: Props) => {
   return (
     <div>
       <Head>
@@ -21,6 +22,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
       </Head>
       <Header />
       {children}
+      <ToastContainer autoClose={2000} />
     </div>
   );
 };
