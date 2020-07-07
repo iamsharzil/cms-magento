@@ -1,6 +1,6 @@
-# TypeScript + Next.js + Magento + Apollo example  
+# TypeScript + Next.js + Magento + Apollo example
 
-##  :sunny: Complete Ecom with Magento and NextJs :sunny:   
+## :sunny: Complete Ecom with Magento and NextJs :sunny:
 
 ### FEATURES
 
@@ -12,7 +12,7 @@
 - :outbox_tray: Set Shipment Mode :outbox_tray:
 - :credit_card: Set Payment Mode :credit_card:
 - :bulb: Place Order :bulb:
- - :boy: Profile Page :boy:
+- :boy: Profile Page :boy:
 
 ### How to run this Project :question:
 
@@ -20,9 +20,15 @@
 npm i --save
 ```
 
+## Configuration
+
+![Image of URL Config for Category in Magneto 2](https://github.com/iamsharzil/next.js/blob/canary/examples/cms-magento/docs/seo.png)
+
+Change URL in the index file with your Category URL
+
 > Create env.local file
 
 ```
-GRAPHQL_URL = https://www.magentoURL.com/graphql  
+GRAPHQL_URL = https://www.magentoURL.com/graphql
 NEXT_PUBLIC_GRAPHQL_URL = https://www.magentoURL.com/graphql
 ```
