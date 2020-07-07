@@ -10,6 +10,8 @@ const Header = () => {
 
   const { logout } = useAuth();
 
+  const quantity = useSelector((state: { quantity: Number }) => state.quantity);
+
   return (
     <header>
       <nav className='navbar navbar-expand-lg navbar-dark bg-primary'>
@@ -37,46 +39,52 @@ const Header = () => {
                 </a>
               </Link>
             </li>
-            {!!isAuthenticated && (
-              <li className='nav-item'>
-                <Link href='/account/profile'>
-                  <a className='nav-link'>My Profile</a>
-                </Link>
-              </li>
-            )}
-            <li className='nav-item'>
-              {!!isAuthenticated ? (
-                <a
-                  className='nav-link'
-                  style={{ cursor: 'pointer' }}
-                  onClick={logout}
-                >
-                  Logout
-                </a>
-              ) : (
-                <Link href='/account/login'>
-                  <a className='nav-link'>Login</a>
-                </Link>
-              )}
-            </li>
-            {!isAuthenticated && (
-              <li className='nav-item'>
-                <Link href='/account/signup'>
-                  <a className='nav-link'>Sign Up</a>
-                </Link>
-              </li>
+            {!!isAuthenticated ? (
+              <>
+                <li className='nav-item'>
+                  <Link href='/account/profile'>
+                    <a className='nav-link'>My Profile</a>
+                  </Link>
+                </li>
+                <li className='nav-item'>
+                  <a
+                    className='nav-link'
+                    style={{ cursor: 'pointer' }}
+                    onClick={logout}
+                  >
+                    Logout
+                  </a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className='nav-item'>
+                  <Link href='/account/login'>
+                    <a className='nav-link'>Login</a>
+                  </Link>
+                </li>
+                <li className='nav-item'>
+                  <Link href='/account/signup'>
+                    <a className='nav-link'>Sign Up</a>
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
-          <form className='form-inline my-2 my-lg-0'>
-            <input
-              className='form-control mr-sm-2'
-              type='text'
-              placeholder='Search'
-            />
-            <button className='btn btn-secondary my-2 my-sm-0' type='submit'>
-              Search
-            </button>
-          </form>
+
+          <Link href='/checkout/cart'>
+            <a>
+              <img
+                className='img-fluid'
+                style={{ cursor: 'pointer' }}
+                src='/icons/cart.svg'
+                alt=''
+              />
+            </a>
+          </Link>
+          <span className='badge badge-primary badge-pill'>
+            {quantity > 0 && quantity}
+          </span>
         </div>
       </nav>
     </header>

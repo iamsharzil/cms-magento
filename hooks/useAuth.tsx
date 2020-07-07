@@ -1,33 +1,41 @@
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import cookie from 'js-cookie';
 import Router from 'next/router';
 
-interface Props {
-  token?: string;
-}
+import { isLoggedIn, isLoggedOut } from 'lib/redux/actions';
+import useCart from './useCart';
 
 const useAuth = () => {
   const dispatch = useDispatch();
+  const { guestId } = useSelector((state: { guestId: string }) => state);
+  const { createEmptyCartCustomer } = useCart();
 
-  const login = (token: Props) => {
+  const login = async (token: string) => {
     cookie.set('token', token, {
       expires: 60,
       secure: process.env.NODE_ENV === 'production',
     });
 
-    dispatch({
-      type: 'LOGIN',
-    });
+    /**
+     * SET isAuthenticated TO TRUE IN REDUX STATE
+     */
+    dispatch(isLoggedIn());
 
-    Router.push('/');
+    /**
+     * CREATES CART ID FOR THE CUSTOMER
+     */
+    await createEmptyCartCustomer({ guestId, token });
   };
 
   const logout = () => {
     cookie.remove('token');
 
-    dispatch({
-      type: 'LOGOUT',
-    });
+    /**
+     * SET isAuthenticated TO FALSE IN REDUX STATE,
+     * CUSTOMER ID TO NULL
+     * QUANTITY TO NULL
+     */
+    dispatch(isLoggedOut());
 
     Router.push('/account/login');
   };
