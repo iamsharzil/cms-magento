@@ -4,7 +4,6 @@ import cookie from 'js-cookie';
 
 import useCart from 'hooks/useCart';
 
-import { Message } from 'components/Message';
 import { IInitialState } from 'interfaces/state';
 import { IVariables } from 'interfaces/variable';
 
@@ -18,7 +17,7 @@ const CouponForm = () => {
   const { register, handleSubmit } = useForm<Inputs>();
   const { applyCoupon, removeCoupon } = useCart();
 
-  const { guestId, customerId, loading, error, cart, id } = useSelector(
+  const { guestId, customerId, loading, cart, id } = useSelector(
     (state: IInitialState) => state
   );
 
@@ -61,7 +60,8 @@ const CouponForm = () => {
           <input
             type='text'
             className='form-control'
-            placeholder='Promo code'
+            // placeholder='Promo code'
+            placeholder='test2'
             name='coupon_code'
             ref={register}
           />

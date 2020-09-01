@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/react-hooks';
 import { motion } from 'framer-motion';
 import Router from 'next/router';
 
-import { FormErrorMessage, Message } from 'components/Message';
+import { FormErrorMessage } from 'components/Message';
 import Loader from 'components/Loader';
 
 import { GET_PAYMENT_SHIPPING_ADDRESS_QUERY } from 'lib/graphql/cart';
@@ -22,7 +22,7 @@ interface Props {
 }
 
 const PaymentMethod: FC<Props> = ({
-  state: { token, guestId, customerId, id, error, loading: payment },
+  state: { token, guestId, customerId, id, loading: payment },
 }) => {
   const { mutateBillingAddress } = useAddress();
   const { setPaymentMode, placeOrder, setShipmentMode } = useCart();
@@ -93,9 +93,9 @@ const PaymentMethod: FC<Props> = ({
       code: fields.payment_mode,
     };
 
-    console.log('billing', billingVariables);
-    console.log('shipment', shippingVariables);
-    console.log('payment', paymentVariables);
+    // console.log('billing', billingVariables);
+    // console.log('shipment', shippingVariables);
+    // console.log('payment', paymentVariables);
 
     await mutateBillingAddress(billingVariables);
     await setShipmentMode(shippingVariables);
@@ -194,6 +194,10 @@ const PaymentMethod: FC<Props> = ({
               )
             )}
             <FormErrorMessage name='payment_mode' errors={errors} />
+            <span className='small text-danger'>
+              ONLY SELECT PAY ON DELIVERY METHOD
+            </span>
+
             <hr className='mb-4' />
 
             <motion.button

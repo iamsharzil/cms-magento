@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 import Layout from 'components/Layout';
@@ -32,8 +31,6 @@ const childVariants = {
 };
 
 const OrderSuccessPage = () => {
-  const router = useRouter();
-
   return (
     <Layout>
       <motion.div

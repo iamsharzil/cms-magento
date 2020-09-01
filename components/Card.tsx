@@ -102,7 +102,7 @@ const Card: FC<IProduct> = (product) => {
             </FadeIn>
           ) : (
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1 }}
               whileTap={{ scale: 0.8 }}
               type='submit'
               className='btn btn-primary'

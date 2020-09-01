@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import Router from 'next/router';
 
-import { FormErrorMessage, Message } from 'components/Message';
+import { FormErrorMessage } from 'components/Message';
 import useAddress from 'hooks/useAddress';
 import { TAddress } from 'interfaces/address';
 import { IVariables } from 'interfaces/variable';
@@ -19,7 +19,7 @@ const BillingForm: FC<Props> = ({
   shippingStatesByCountry,
   state: { token, guestId, customerId },
 }) => {
-  const { loading, error, id } = useSelector((state: IInitialState) => state);
+  const { loading, id } = useSelector((state: IInitialState) => state);
 
   const { mutateBillingAddress } = useAddress();
 
