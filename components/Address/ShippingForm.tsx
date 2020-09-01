@@ -4,7 +4,7 @@ import Router from 'next/router';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 
-import { FormErrorMessage, Message } from 'components/Message';
+import { FormErrorMessage } from 'components/Message';
 
 import { TAddress } from 'interfaces/address';
 import { IInitialState } from 'interfaces/state';
@@ -21,7 +21,7 @@ const ShippingForm: FC<Props> = ({
   shippingStatesByCountry,
   state: { token, guestId, customerId, isAuthenticated },
 }) => {
-  const { loading, error, id } = useSelector((state: IInitialState) => state);
+  const { loading, id } = useSelector((state: IInitialState) => state);
   const { mutateShippingAddress, setEmailOnCart } = useAddress();
   const { register, handleSubmit, errors } = useForm<TAddress>();
 

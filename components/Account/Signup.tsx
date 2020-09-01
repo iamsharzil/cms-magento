@@ -5,7 +5,7 @@ import Router from 'next/router';
 import { useDispatch } from 'react-redux';
 import FadeIn from 'react-fade-in';
 
-import { FormErrorMessage, Message } from 'components/Message';
+import { FormErrorMessage } from 'components/Message';
 
 import { CREATE_CUSTOMER_QUERY } from 'lib/graphql/account';
 import { setSuccess, setError } from 'lib/redux/actions';

@@ -1,4 +1,3 @@
-import { TAddress } from 'interfaces/address';
 import { TPriceRange } from './product';
 
 type CartItem = {

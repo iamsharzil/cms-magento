@@ -44,7 +44,7 @@ const useApolloQuery = () => {
     query: DocumentNode,
     variables: IVariables
   ) => {
-    const { customerId, guestId, token, fetchPolicy } = variables;
+    const { customerId, guestId, token } = variables;
 
     const cartId = !!customerId ? customerId : guestId;
 
@@ -67,7 +67,7 @@ const useApolloQuery = () => {
       },
     });
 
-    console.log('data', data);
+    // console.log('data', data);
 
     return {
       data,
