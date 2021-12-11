@@ -10,6 +10,7 @@ import { initializeApollo } from 'lib/apolloClient';
 import { CATEGORY_LIST_QUERY } from 'lib/graphql/category';
 
 import { IProduct } from 'interfaces/product';
+import { CATEGORY_URL } from 'config';
 
 const container = {
   hidden: { opacity: 1, scale: 0 },
@@ -26,7 +27,7 @@ const container = {
 
 const IndexPage: NextPage = () => {
   const { loading, error, data } = useQuery(CATEGORY_LIST_QUERY, {
-    variables: { eq: 'shop-now' },
+    variables: { eq: CATEGORY_URL },
     notifyOnNetworkStatusChange: true,
   });
 
@@ -64,7 +65,7 @@ export async function getStaticProps() {
   await apolloClient.query({
     query: CATEGORY_LIST_QUERY,
     // URL OF THE CATEGORY
-    variables: { eq: 'shop-now' },
+    variables: { eq: CATEGORY_URL },
   });
 
   return {
